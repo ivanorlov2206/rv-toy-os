@@ -1,20 +1,22 @@
 all: Image
 
-Image:	kernel serial boot
-	riscv64-unknown-elf-gcc -T link.lds -mcmodel=medany -ffreestanding -nostdlib -o image boot/boot.o serial/serial.o kernel/kernel.o
+Image: kernel.o mm.o serial.o boot.o
+	riscv64-unknown-elf-gcc -T link.lds -mcmodel=medany -ffreestanding -nostdlib -o image boot/boot.o mm/mm.o serial/serial.o kernel/kernel.o -lgcc
 
-kernel:
+kernel.o:
 	make -C kernel/
-serial:
+mm.o:
+	make -C mm/
+serial.o:
 	make -C serial/
-boot:
-	make -C boot/
-
-all:
-	make -C kernel/
-	make -C serial/
+boot.o:
 	make -C boot/
 
 
 clean:
+	make -C kernel/ clean
+	make -C serial/ clean
+	make -C boot/ clean
+	make -C mm/ clean
 	rm -rf *.o
+	rm -rf image
