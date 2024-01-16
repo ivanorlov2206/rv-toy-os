@@ -234,7 +234,9 @@ void map_kernel(void)
 	map_kernel_range(root, HEAP_START, HEAP_START + pages_count * PAGE_SIZE, 0b0110);
 
 	//map_kernel_range(root, TEXT_START, MEMORY_END, 0b001110);
-	map(root, 0x10000000, 0x10000000, 0, 0b00001110);
+	map(root, 0x10000000, 0x10000000, 0, 0b0000110);
+	//map(root, 0x2004000, 0x2004000, 0, 0b0000110);
+	//map(root, 0x200BFF8, 0x200BFF8, 0, 0b0000110);
 
 	uint64_t root_ppn = (uint64_t)root >> 12;
 	uint64_t satp = (uint64_t)8 << 60 | root_ppn;
