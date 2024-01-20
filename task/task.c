@@ -41,7 +41,7 @@ static void example_task_function(void *data)
 {
 	uint64_t i;
 	uint64_t num = (uint64_t) data;
-	for (i = 0; i < 100; i++){
+	for (i = 0; i < 10; i++){
 		pr_n("Task number: ", num);
 	}
 }
@@ -67,17 +67,21 @@ static void init_queue(struct task_queue *q)
 void add_to_queue(struct task *task, struct task_queue *queue)
 {
 	struct task_queue *task_elem = alloc_task_queue();
-	struct task_queue *head = queue;
+	struct task_queue *head = queue->prev;
 
 	init_queue(task_elem);
 
-	while(head->next)
-		head = head->next;
-
 	task_elem->task = task;
-	task_elem->next = 0;
-	head->next = task_elem;
-	task_elem->prev = head;
+	task_elem->next = NULL;
+
+	if (head) {
+		head->next = task_elem;
+		task_elem->prev = head;
+	} else {
+		queue->next = task_elem;
+		task_elem->prev = queue;
+	}
+	queue->prev = task_elem;
 }
 
 
@@ -100,17 +104,12 @@ void schedule(void)
 {
 	struct task_queue *last;
 	uint64_t sepc;
-	asm("csrw sstatus, %0"::"r"((1 << 8) | (1 << 5) | (3 << 13)));
+	asm("csrw sstatus, %0"::"r"((1 << 8) | (3 << 13)));
 	if (current && current->status != END) {
 		asm("csrr %0, sepc" : "=r" (sepc));
-		current->regs.pc = sepc;asm("li tp, 0");
-		last = &main_queue;
-		while(last->next)
-			last = last->next;
-		current_queue->prev = last;
-		current_queue->next = NULL;
-		current->status = WAIT;
-		last->next = current_queue;
+		current->regs.pc = sepc;
+		asm("li tp, 0");
+		add_to_queue(current, &main_queue);
 	}
 	while(!main_queue.next);
 	current_queue = main_queue.next;
@@ -121,6 +120,7 @@ void schedule(void)
 	if (main_queue.next)
 		current_queue->next->prev = current_queue;
 	current->regs.a0 = current->data;
+	asm("csrw sstatus, %0"::"r"((1 << 8) | (1 << 5) | (3 << 13)));
 	load_and_exec();
 }
 
