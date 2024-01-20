@@ -2,10 +2,6 @@
 #include "../include/errno.h"
 #include "mm.h"
 
-uint64_t pages_count;
-static uint64_t first_page;
-static uint64_t alloc_addr;
-static struct page *pages;
 
 uint64_t floor_page(uint64_t x)
 {
@@ -15,6 +11,25 @@ uint64_t floor_page(uint64_t x)
 uint64_t ceil_page(uint64_t x)
 {
 	return (x + PAGE_SIZE - 1) / PAGE_SIZE * PAGE_SIZE;
+}
+
+struct page {
+	uint8_t status;
+};
+
+static struct page *pages;
+uint64_t pages_count;
+static uint64_t first_page;
+static uint64_t alloc_addr;
+
+uint16_t get_heap_size(void)
+{
+	return HEAP_SIZE;
+}
+
+static void *addr_by_num(uint64_t page_num)
+{
+	return (void *)((alloc_addr / PAGE_SIZE + page_num) * PAGE_SIZE);
 }
 
 void init_pages(void)
