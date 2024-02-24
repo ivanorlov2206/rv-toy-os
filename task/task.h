@@ -55,6 +55,7 @@ struct task_queue {
 	struct task *task;
 };
 
+void print_allocated(void);
 void test_tasks(void);
 void schedule(void);
 extern struct task *current;

@@ -62,7 +62,8 @@ void strap()
 int kernel_main(void)
 {
 	init_pages();
-	
+	kmalloc_init();
+
 	map_kernel();
 	puts("\nThe kernel loaded\n");
 
