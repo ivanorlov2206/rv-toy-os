@@ -15,7 +15,6 @@ void trap()
 	asm("csrr %0, mcause" : "=r" (cause):);
 	if (cause & ((uint64_t)1 << 63)) {
 		if ((cause & 0xFF) == 0x07) {
-			//puts("M timer");
 			// Reset the timer
 			asm("csrs mie, %0" :: "r"(0x20):);
 			asm("csrs mip, %0" :: "r"(0x20):);
@@ -23,8 +22,6 @@ void trap()
 			asm("ld %0, 0(%1)" : "=r"(current_time) : "r"(TIMER):);
 			current_time += (uint64_t)2000;
 			asm("sd %0, 0(%1)" : :"r"(current_time), "r"(TIMER_CMP):);
-			
-			//asm("nop" ::);
 		}
 		return;
 	} else if (cause == 9) {
@@ -37,23 +34,21 @@ void trap()
 		mepc += 4;
 		asm("csrw mepc, %0"::"r"(mepc):);
 		return;
-
-	} else {
-		// Exception
-		puts("\nException.\n");
-		asm("csrr %0, mtval" : "=r" (mtval):);
-		asm("csrr %0, mepc" : "=r" (mepc):);
-		pr_n("mepc: ", mepc);
-		pr_n("mtval: ", mtval);
-		pr_n("mcause: ", cause);
-		while (1);
 	}
+	// Exception
+	puts("\nException.\n");
+	asm("csrr %0, mtval" : "=r" (mtval):);
+	asm("csrr %0, mepc" : "=r" (mepc):);
+	pr_n("mepc: ", mepc);
+	pr_n("mtval: ", mtval);
+	pr_n("mcause: ", cause);
+	while (1);
 }
 
 __attribute__((interrupt("supervisor")))
 void strap()
 {
-	uint64_t cause = 0, status = 0;
+	uint64_t cause = 0;
 
 	asm("csrr %0, scause" : "=r" (cause):);
 	
@@ -76,13 +71,6 @@ int kernel_main(void)
 
 void supervisor_m(void)
 {
-	uint64_t i = 0;
-
 	test_tasks();
 	puts("\nWe are in supervisor mode now\n");
-
-	for (i = 0; i < 100; i++) {
-		pr_n("i: ", i);
-	}
-
 }
